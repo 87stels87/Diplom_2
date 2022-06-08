@@ -3,17 +3,23 @@ import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.Response;
 import org.junit.Test;
 
+import java.util.ArrayList;
+
 import static io.restassured.RestAssured.given;
 import static java.net.HttpURLConnection.*;
 import static org.hamcrest.CoreMatchers.*;
 
 public class CreateOrderTest extends BaseTest {
+
     @Test
     @DisplayName("Создание заказа для авторизованного юзера")
     @Description("Создание заказа для авторизованного юзера")
 
     public void testCreateOrderByAutorization() {
         User user = User.getRandomFullUser();
+        IngredientHash ingredientHash = new IngredientHash(new ArrayList<>());
+        ingredientHash.ingredients.add("61c0c5a71d1f82001bdaaa6f");
+        ingredientHash.ingredients.add("61c0c5a71d1f82001bdaaa6d");
         given()
                 .spec(RestAssuredClient.getBaseSpec())
                 .body(user)
@@ -34,9 +40,7 @@ public class CreateOrderTest extends BaseTest {
         Response response1 = given()
                 .header("authorization", token)
                 .spec(RestAssuredClient.getBaseSpec())
-                .body("{\n" +
-                        "  \"ingredients\": [\"61c0c5a71d1f82001bdaaa79\",\"61c0c5a71d1f82001bdaaa7a\"]\n" +
-                        "}")
+                .body(ingredientHash)
                 .when().log().all()
                 .post(ORDERS_PATH);
         response1.then().assertThat().log().all()
@@ -50,11 +54,12 @@ public class CreateOrderTest extends BaseTest {
     @DisplayName("Создание заказа для НЕ авторизованного юзера")
     @Description("Создание заказа для НЕ авторизованного юзера")
     public void testCreateOrderWithoutAutorization() {
+        IngredientHash ingredientHash = new IngredientHash(new ArrayList<>());
+        ingredientHash.ingredients.add("61c0c5a71d1f82001bdaaa6f");
+        ingredientHash.ingredients.add("61c0c5a71d1f82001bdaaa6d");
         Response response = given()
                 .spec(RestAssuredClient.getBaseSpec())
-                .body("{\n" +
-                        "  \"ingredients\": [\"61c0c5a71d1f82001bdaaa79\",\"61c0c5a71d1f82001bdaaa7a\"]\n" +
-                        "}")
+                .body(ingredientHash)
                 .when().log().all()
                 .post(ORDERS_PATH);
         response.then().assertThat().log().all()
@@ -68,11 +73,11 @@ public class CreateOrderTest extends BaseTest {
     @DisplayName("Создание заказа с невалидным хешом")
     @Description("Создание заказа с невалидным хешом")
     public void testCreateOrderByNotValidHash() {
+        IngredientHash ingredientHash = new IngredientHash(new ArrayList<>());
+        ingredientHash.ingredients.add("61c0c5a71d1f82001bdaa");
         Response response = given()
                 .spec(RestAssuredClient.getBaseSpec())
-                .body("{\n" +
-                        "  \"ingredients\": [\"61caaa71\",\"61c0c5a71d1aa71\"]\n" +
-                        "}")
+                .body(ingredientHash)
                 .when().log().all()
                 .post(ORDERS_PATH);
         response.then().assertThat().log().all()
@@ -83,11 +88,11 @@ public class CreateOrderTest extends BaseTest {
     @DisplayName("Создание заказа без ингредиентов")
     @Description("Создание заказа без ингредиентов")
     public void testCreateOrderByNullIngredient() {
+        IngredientHash ingredientHash = new IngredientHash(new ArrayList<>());
+        ingredientHash.ingredients.add(null);
         Response response = given()
                 .spec(RestAssuredClient.getBaseSpec())
-                .body("{\n" +
-                        "  \"ingredients\": []\n" +
-                        "}")
+                .body(ingredientHash)
                 .when().log().all()
                 .post(ORDERS_PATH);
         response.then().assertThat().log().all()
